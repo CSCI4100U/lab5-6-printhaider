@@ -1,126 +1,202 @@
 import 'package:flutter/material.dart';
-import 'gradeForm.dart';
-import 'package:path/path.dart';
-import 'package:sqflite/sqflite.dart';
 
+void main() {
+  runApp(MyApp());
+}
 
+class Grade {
+  int sid;
+  String grade;
 
-var database;
-
-void main() async{
-  WidgetsFlutterBinding.ensureInitialized();
-
-  database = openDatabase(
-      join(await getDatabasesPath(), 'grades.db'),
-
-    onCreate: (db, version){
-      return db.execute(
-        'CREATE TABLE grades(sid INTEGER PRIMARY KEY, grade TEXT)',
-      );
-    },
-
-    version: 1
-  );
-  runApp(const MyApp());
+  Grade(this.sid, this.grade);
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Grade List',
       theme: ThemeData(
-        
         primarySwatch: Colors.blue,
       ),
-      home: const MyHomePage(title: 'Forms and SDLite'),
+      home: MyHomePage(title: 'Grade List'),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
   final String title;
 
+  MyHomePage({Key? key, required this.title}) : super(key: key);
+
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  _MyHomePageState createState() => _MyHomePageState();
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+  final List<Grade> grades = [Grade(1, 'A'), Grade(2, 'B'), Grade(3, 'C')];
 
-  void _incrementCounter() {
-    setState(() {
-      
-      _counter++;
-    });
+  TextEditingController idController = TextEditingController();
+  TextEditingController gradeController = TextEditingController();
+
+  // Method to edit a grade
+  _editGrade(int index) {
+  // Display a dialog for editing the grade
+  showDialog(
+  context: context,
+  builder: (BuildContext context) {
+  String newGrade = grades[index].grade;
+
+  return AlertDialog(
+  title: Text('Edit Grade'),
+  content: TextField(
+  controller: TextEditingController(text: newGrade),
+  onChanged: (value) {
+  newGrade = value;
+  },
+  ),
+  actions: <Widget>[
+  TextButton(
+  child: Text('Save'),
+  onPressed: () {
+  setState(() {
+  grades[index].grade = newGrade;
+  });
+  Navigator.of(context).pop();
+  },
+  ),
+  TextButton(
+  child: Text('Cancel'),
+  onPressed: () {
+  Navigator.of(context).pop();
+  },
+  ),
+  ],
+  );
+  },
+  );
+  }
+
+  // Method to delete a grade
+  _deleteGrade(int index) {
+  // Display a confirmation dialog for deleting the grade
+  showDialog(
+  context: context,
+  builder: (BuildContext context) {
+  return AlertDialog(
+  title: Text('Delete Grade'),
+  content: Text('Are you sure you want to delete this grade?'),
+  actions: <Widget>[
+  TextButton(
+  child: Text('Delete'),
+  onPressed: () {
+  setState(() {
+  grades.removeAt(index);
+  });
+  Navigator.of(context).pop();
+  },
+  ),
+  TextButton(
+  child: Text('Cancel'),
+  onPressed: () {
+  Navigator.of(context).pop();
+  },
+  ),
+  ],
+  );
+  },
+  );
+  }
+
+  // Method to open the form for entering a new grade
+  _openForm() {
+  showDialog(
+  context: context,
+  builder: (BuildContext context) {
+  return AlertDialog(
+  title: Text('Add Grade'),
+  content: Column(
+  mainAxisSize: MainAxisSize.min,
+  children: <Widget>[
+  TextField(
+  controller: idController,
+  decoration: InputDecoration(hintText: 'Enter your SID'),
+  ),
+  TextField(
+  controller: gradeController,
+  decoration: InputDecoration(hintText: 'Enter your Grade'),
+  ),
+  ],
+  ),
+  actions: <Widget>[
+  TextButton(
+  child: Text('Add'),
+  onPressed: () {
+  setState(() {
+  grades.add(Grade(int.parse(idController.text), gradeController.text));
+  idController.clear();
+  gradeController.clear();
+  });
+  Navigator.of(context).pop();
+  },
+  ),
+  TextButton(
+  child: Text('Cancel'),
+  onPressed: () {
+  Navigator.of(context).pop();
+  },
+  ),
+  ],
+  );
+  },
+  );
   }
 
   @override
   Widget build(BuildContext context) {
-    
-    return Scaffold(
-      appBar: AppBar(
-        actions: <Widget>[
-          IconButton(onPressed: (){}, icon: Icon(Icons.edit),
-          
-        )],
-        title: Text(widget.title),
-      ),
-      body: Center(
-        
-        child: ListView.builder
-            (
-              itemCount: grades.length,
-              itemBuilder: (BuildContext context, int index) {
-                return new ListTile(
-                  title: Text(grades[index].sid!),
-                  subtitle: Text(grades[index].grade!),
-                );
-              }
-          ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: (){
-          Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => GradeForm()));
-        },
-        tooltip: 'Add',
-        child: const Icon(Icons.add),
-      ), 
-    );
+  return Scaffold(
+  appBar: AppBar(
+  title: Text(widget.title),
+  ),
+  body: Column(
+  children: <Widget>[
+  Expanded(
+  child: ListView.builder(
+  itemCount: grades.length,
+  itemBuilder: (context, index) {
+  return ListTile(
+  title: Text(grades[index].sid.toString()),
+  subtitle: Text(grades[index].grade),
+  trailing: Row(
+  mainAxisSize: MainAxisSize.min,
+  children: <Widget>[
+  IconButton(
+  icon: Icon(Icons.edit),
+  onPressed: () => _editGrade(index),
+  ),
+  IconButton(
+  icon: Icon(Icons.delete),
+  onPressed: () => _deleteGrade(index),
+  ),
+  ],
+  ),
+  );
+  },
+  ),
+  ),
+  Container(
+  width: 200, // Adjust the width as needed
+  child: Align(
+  alignment: Alignment.bottomCenter,
+  child: ElevatedButton(
+  onPressed: _openForm, // Open the form on button click
+  child: Text('Add Grade'),
+  style: ElevatedButton.styleFrom(primary: Colors.blue),
+  ),
+  ),
+  ),
+  ],
+  ),
+  );
   }
 }
-
-class grClass{
-  String? sid;
-  String? grade;
-
-  grClass({this.sid, this.grade});
-}
-
-List<grClass> grades = [
-  grClass(sid: "10000001", grade: "A"),
-  grClass(sid: "10000002", grade: "A+"),
-  grClass(sid: "10000003", grade: "B"),
-  grClass(sid: "10000004", grade: "B+"),
-  grClass(sid: "10000005", grade: "A-"),
-  grClass(sid: "10000006", grade: "D"),
-  grClass(sid: "10000007", grade: "C"),
-  grClass(sid: "10000008", grade: "A"),
-  grClass(sid: "10000009", grade: "D+"),
-  grClass(sid: "10000010", grade: "B-"),
-];
-
-void _addGrade(grClass value){
-    grades.add(value);
-  }
-  void _editGrade(){
-  }
-  void _deleteGrade(){
-  }

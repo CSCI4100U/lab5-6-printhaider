@@ -2,18 +2,15 @@ import 'package:flutter/material.dart';
 import 'main.dart';
 import 'GradesModel.dart';
 
-String id = " ";
-String grade = " ";
-
-
 class GradeForm extends StatefulWidget {
   @override
   _GradeFormState createState() => _GradeFormState();
 }
 
 class _GradeFormState extends State<GradeForm> {
-
   final _formKey = GlobalKey<FormState>();
+  final TextEditingController idController = TextEditingController();
+  final TextEditingController gradeController = TextEditingController();
   bool isSaving = false;
 
   @override
@@ -21,80 +18,70 @@ class _GradeFormState extends State<GradeForm> {
     return Scaffold(
       appBar: AppBar(title: Text("Add Grade")),
       body: SafeArea(
-        child: ListView(
-          children: <Widget>[
-            Row(
-              
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: <Widget>[
-                new Padding(padding: new EdgeInsets.all(10.0)),
-                Text('SID: '),
-
-                Flexible(
-                  child:TextField(
-                    onSubmitted: (text){
-                      id = text;
-                    },
-                    decoration: InputDecoration(
-                      hintText: 'Enter your ID',
+        child: Form(
+          key: _formKey,
+          child: ListView(
+            children: <Widget>[
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  Padding(padding: EdgeInsets.all(10.0)),
+                  Text('SID: '),
+                  Flexible(
+                    child: TextField(
+                      controller: idController,
+                      decoration: InputDecoration(
+                        hintText: 'Enter your ID',
+                      ),
                     ),
                   ),
-                ),
-              ],
-            ),
-
-          
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: <Widget>[
-                new Padding(padding: new EdgeInsets.all(10.0)),
-                Text('Grade: '),
-
-                Flexible(
-                  child:TextField(
-                    onSubmitted: (text){
-                      grade = text;
-                    },
-                    decoration: InputDecoration(
-                        hintText: 'Enter your Grade'
+                ],
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  Padding(padding: EdgeInsets.all(10.0)),
+                  Text('Grade: '),
+                  Flexible(
+                    child: TextField(
+                      controller: gradeController,
+                      decoration: InputDecoration(
+                        hintText: 'Enter your Grade',
+                      ),
                     ),
                   ),
-                ),
-
-              ],
-            ),
-          ],
+                ],
+              ),
+            ],
+          ),
         ),
-
-
       ),
-
-      
       floatingActionButton: FloatingActionButton(
-        onPressed: ()async{
-          if(_formKey.currentState == null) return;
+        onPressed: () async {
+          if (_formKey.currentState!.validate()) {
+            setState(() {
+              isSaving = true;
+            });
 
-            if(_formKey.currentState!.validate()){
-              setState(() {
-                isSaving = true;
-              });
-              await insertGrade({
-                'sid' : int.parse(id),
-                'grade' : grade,
-              });
-              const snackBar = SnackBar(content: Text('Record inserted successfully'));
+            await insertGrade({
+              'sid': int.parse(idController.text),
+              'grade': gradeController.text,
+            });
 
-              ScaffoldMessenger.of(context).showSnackBar(snackBar);
-              setState(() {
-                isSaving = false;
-              });}
-         Navigator.pop(context);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Record inserted successfully')),
+            );
+
+            setState(() {
+              isSaving = false;
+            });
+
+            Navigator.pop(context); // Navigate back to the list screen.
+          }
         },
-        tooltip: 'Increment',
-        child: const Icon(Icons.save),
-      )
-    )
-    ;
+        tooltip: 'Save',
+        child: Icon(Icons.save),
+      ),
+    );
   }
 }
-
