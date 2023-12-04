@@ -31,6 +31,7 @@ environment:
 # versions available, run `flutter pub outdated`.
 dependencies:
   sqflite:
+  fl_chart: ^0.40.6
   flutter:
     sdk: flutter
 
